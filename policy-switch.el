@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-22 02:18:11 ben>
+;; Time-stamp: <2015-10-22 02:19:08 ben>
 
 ;; This file is part of policy-switch.
 
@@ -536,7 +536,9 @@ function to call."
 			     "desktop-create-buffer"
 			   "desktop-append-buffer-args")
 			 " "
-			 desktop-file-version
+			 (if (numberp desktop-file-version)
+			     (number-to-string desktop-file-version)
+			   desktop-file-version)
 			 (let ((temp-string))
 			   (dolist (e buffer-info)
 			     (setq temp-string (concat temp-string
