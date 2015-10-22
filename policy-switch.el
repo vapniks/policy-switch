@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-22 02:19:08 ben>
+;; Time-stamp: <2015-10-22 02:22:53 ben>
 
 ;; This file is part of policy-switch.
 
@@ -74,15 +74,21 @@
 (require 'winner)
 (require 'desktop)
 
+(defgroup policy-switch nil
+  "Window configuration navigation utility."
+  :prefix "policy-switch-"
+  :group 'convenience)
+
 (defvar policy-switch-policies-list ()
   "List of all policies maintained by policy-switch. The list has the following form:
       (<current-policy-name> ((<policy-name> . (<current-config-name> ((<window-config-name> .
       <window-config-obj> <window-data>))))))")
 
 (defcustom policy-switch-live-buffer-modes-restore
-'(gnus-summary-mode gnus-article-mode bbdb-mode dictionary-mode
-help-mode)
-  "List of major modes that needs to be restored in spite of a live buffer object being present.")
+  '(gnus-summary-mode gnus-article-mode bbdb-mode dictionary-mode
+		      help-mode)
+  "List of major modes that needs to be restored in spite of a live buffer object being present."
+  :group 'policy-switch)
   
 (defcustom policy-switch-config-restore-policy 'needs-restoring
   "Specifies when to restore the config when 
@@ -90,10 +96,12 @@ selected.  Valid values are:
 
 'always Always restore the config.
 'needs-restoring Restore the config when `policy-switch-config-needs-restoring', returns t.
-'never Never restore the config automatically. ")
+'never Never restore the config automatically. "
+  :group 'policy-switch)
 
 (defcustom policy-switch-mode-line-p t
-  "Whether policy status should be shown in the mode line.")
+  "Whether policy status should be shown in the mode line."
+  :group 'policy-switch)
   
 (defcustom policy-switch-buffer-mode-handlers '((w3m-mode . policy-switch-buffer-info-w3m)
 						(gnus-summary-mode . policy-switch-buffer-info-gnus)
@@ -110,7 +118,8 @@ parsable by the Lisp interpreter and is evaluated whenever a
 config, whose buffers have their matching major-modes included,
 needs to be restored.  The buffer from which the restore string
 must be created is current in the call.  Functions take no
-arguments and must return the restored buffer object.")
+arguments and must return the restored buffer object."
+  :group 'policy-switch)
 
 (defvar policy-switch-mode-line-elm nil)
  
