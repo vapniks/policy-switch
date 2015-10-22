@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-22 02:22:53 ben>
+;; Time-stamp: <2015-10-22 02:37:50 ben>
 
 ;; This file is part of policy-switch.
 
@@ -85,22 +85,26 @@
       <window-config-obj> <window-data>))))))")
 
 (defcustom policy-switch-live-buffer-modes-restore
-  '(gnus-summary-mode gnus-article-mode bbdb-mode dictionary-mode
-		      help-mode)
+  '(gnus-summary-mode gnus-article-mode bbdb-mode dictionary-mode help-mode)
   "List of major modes that needs to be restored in spite of a live buffer object being present."
+  :type '(list symbol)
   :group 'policy-switch)
   
 (defcustom policy-switch-config-restore-policy 'needs-restoring
-  "Specifies when to restore the config when 
-selected.  Valid values are:
+  "Specifies when to restore the config when selected.  
+Valid values are:
 
 'always Always restore the config.
 'needs-restoring Restore the config when `policy-switch-config-needs-restoring', returns t.
-'never Never restore the config automatically. "
+'never Never restore the config automatically."
+  :type '(choice (const always)
+		 (const needs-restoring)
+		 (const never))
   :group 'policy-switch)
 
 (defcustom policy-switch-mode-line-p t
   "Whether policy status should be shown in the mode line."
+  :type 'boolean
   :group 'policy-switch)
   
 (defcustom policy-switch-buffer-mode-handlers '((w3m-mode . policy-switch-buffer-info-w3m)
@@ -109,8 +113,8 @@ selected.  Valid values are:
 						(help-mode . policy-switch-buffer-info-help)
 						(dictionary-mode . policy-switch-buffer-info-dictionary)
 						(gnus-article-mode . policy-switch-buffer-info-gnus))
-"Alist of handler functions for buffer major modes.  When a
-config is created this list is used to determine what function
+  "Alist of handler functions for buffer major modes.
+When a config is created this list is used to determine what function
 should have the responsibilty of creating buffer recover
 strings (if buffer is restorable by desktop, desktop takes
 precedence and this variable is not used). The string must be
@@ -119,10 +123,10 @@ config, whose buffers have their matching major-modes included,
 needs to be restored.  The buffer from which the restore string
 must be created is current in the call.  Functions take no
 arguments and must return the restored buffer object."
+  :type '(alist :key-type (symbol :tag "Mode") :value-type function)
   :group 'policy-switch)
 
 (defvar policy-switch-mode-line-elm nil)
- 
 
 (defun policy-switch-policies-list-make-empty ()
   "Make policy list empty."
