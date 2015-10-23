@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-23 12:59:53 ben>
+;; Time-stamp: <2015-10-23 13:17:58 ben>
 
 ;; This file is part of policy-switch.
 
@@ -165,7 +165,7 @@ buffer object."
 	     (cond ((= (length policy-switch-policies-list) 1)
 		    (car (policy-switch-policy-get)))
 		   (t
-		    (completing-read "Remove policy: " 
+		    (ido-completing-read "Remove policy: " 
 				     (mapcar (lambda (policy)
 					       (car policy))
 					     policy-switch-policies-list)
@@ -267,7 +267,8 @@ Otherwise, remove all configs in current policy."
 
 ;;;###autoload
 (defun policy-switch-window-info (&optional config-win-data)
-  "Get window data from current window configuration."
+  "Get window data from current window configuration.
+Optional argument CONFIG-WIN-DATA is a list of window data."
   (let ((window-data ()))
     (dolist (buffer-data (winner-win-data))
       (let* ((buffer-obj (cdr buffer-data))
@@ -289,12 +290,13 @@ Otherwise, remove all configs in current policy."
 	     (cond ((<= (length (policy-switch-configs-get (policy-switch-policy-get))) 1)
 		    (caar (policy-switch-configs-get (policy-switch-policy-get))))
 		   (t
-		    (completing-read "Remove config: " 
-				     (mapcar (lambda (config)
-					       (car config))
-					     (policy-switch-configs-get (policy-switch-policy-get)))
-				     nil t nil nil (caar (policy-switch-configs-get (policy-switch-policy-get)))
-				     t)))
+		    (ido-completing-read
+		     "Remove config: "
+		     (mapcar (lambda (config)
+			       (car config))
+			     (policy-switch-configs-get (policy-switch-policy-get)))
+		     nil t nil nil (caar (policy-switch-configs-get (policy-switch-policy-get)))
+		     t)))
 	   nil)))
   (let* ((policy (policy-switch-policy-get))
 	 (configs (policy-switch-configs-get policy t))
@@ -309,8 +311,8 @@ Otherwise, remove all configs in current policy."
   "Switch to next policy."
   (interactive)
   (if (or policy-switch-policies-list
-		 (and (y-or-n-p "No policies loaded. Load now? ")
-		      (policy-switch-load-policies)))
+	  (and (y-or-n-p "No policies loaded. Load now? ")
+	       (policy-switch-load-policies)))
       (progn
 	(when (> (length policy-switch-policies-list) 1)
 	  (setq policy-switch-policies-list (append (list (nth 1 policy-switch-policies-list))
@@ -348,10 +350,10 @@ Otherwise, remove all configs in current policy."
    (list (if (or policy-switch-policies-list
 		 (and (y-or-n-p "No policies loaded. Load now? ")
 		      (policy-switch-load-policies)))
-	     (completing-read "Goto policy: " 
-			      (mapcar (lambda (policy) (car policy))
-				      policy-switch-policies-list)
-			      nil t)
+	     (ido-completing-read "Goto policy: "
+				  (mapcar (lambda (policy) (car policy))
+					  policy-switch-policies-list)
+				  nil t)
 	   nil)))
   (let* ((policy (policy-switch-policy-get policy-name))
 	 (pos-elem (position policy
@@ -408,12 +410,12 @@ When called interactively the current policy is used."
 	     (cond ((<= (length (policy-switch-configs-get (policy-switch-policy-get))) 1)
 		    (caar (policy-switch-configs-get (policy-switch-policy-get))))
 		   (t
-		    (completing-read "Goto config: "
-				     (mapcar (lambda (config)
-					       (car config))
-					     (policy-switch-configs-get (policy-switch-policy-get)))
-				     nil t nil nil (caar (policy-switch-configs-get (policy-switch-policy-get)))
-				     t)))
+		    (ido-completing-read "Goto config: "
+					 (mapcar (lambda (config)
+						   (car config))
+						 (policy-switch-configs-get (policy-switch-policy-get)))
+					 nil t nil nil (caar (policy-switch-configs-get (policy-switch-policy-get)))
+					 t)))
 	   (error "Unable to load policies"))
 	 nil))
   (let* ((policy (policy-switch-policy-get policy-name))
