@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-23 13:47:42 ben>
+;; Time-stamp: <2015-10-23 16:02:54 ben>
 
 ;; This file is part of policy-switch.
 
@@ -287,8 +287,10 @@ Optional argument CONFIG-WIN-DATA is a list of window data."
   "Remove config with `NAME' from current policy."
   (interactive
    (list (if policy-switch-policies-list
-	     (cond ((<= (length (policy-switch-configs-get (policy-switch-policy-get))) 1)
-		    (caar (policy-switch-configs-get (policy-switch-policy-get))))
+	     (cond ((<= (length (policy-switch-configs-get
+				 (policy-switch-policy-get))) 1)
+		    (caar (policy-switch-configs-get
+			   (policy-switch-policy-get))))
 		   (t
 		    (ido-completing-read
 		     "Remove config: "
@@ -452,7 +454,7 @@ When called interactively the current policy is used."
 Defaults to current config in current policy.
 A config needs restoring if any of its buffer objects are nil.
 Return nil if restoring is needed, false otherwise."
-  (catch 'needs-restoring 
+  (catch 'needs-restoring
     (dolist (buffer-restore-data config-win-data)
       (let* ((buf-data (cdr buffer-restore-data))
 	     (buf-object (car buf-data)))
@@ -461,17 +463,23 @@ Return nil if restoring is needed, false otherwise."
     nil))
 
 ;;;###autoload
+(defun remove-unreadable (tree)
+  "Remove unreadable objects from TREE."
+  (cl-subst nil 'anywinorbuffer tree
+	    :test (lambda (a b)
+		    (condition-case err
+			(and (atom b)
+			     (read (format "%S" b))
+			     nil)
+		      (error t)))))
+
+;;;###autoload
 (defun policy-switch-save-policies nil
   "Save all policies into `policy-switch-save-file'."
   (interactive)
-  (save-sexp-save-setq
-   policy-switch-save-file
+  (save-sexp-save-setq policy-switch-save-file
    'policy-switch-policies-list
-   nil nil
-   (cl-subst nil 'anywinorbuffer policy-switch-policies-list
-	     :test (lambda (a b) (or (bufferp a) (bufferp b)
-				     (window-configuration-p a)
-				     (window-configuration-p b))))))
+   nil nil (remove-unreadable policy-switch-policies-list)))
 
 ;;;###autoload
 (defun policy-switch-load-policies nil
