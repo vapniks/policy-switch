@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-22 02:37:50 ben>
+;; Time-stamp: <2015-10-23 03:24:42 ben>
 
 ;; This file is part of policy-switch.
 
@@ -73,6 +73,7 @@
 (require 'cl)
 (require 'winner)
 (require 'desktop)
+(require 'save-sexp)
 
 (defgroup policy-switch nil
   "Window configuration navigation utility."
@@ -81,8 +82,13 @@
 
 (defvar policy-switch-policies-list ()
   "List of all policies maintained by policy-switch. The list has the following form:
-      (<current-policy-name> ((<policy-name> . (<current-config-name> ((<window-config-name> .
+\(<current-policy-name> ((<policy-name> . (<current-config-name> ((<window-config-name> .
       <window-config-obj> <window-data>))))))")
+
+(defcustom policy-switch-save-file "~/.emacs.d/.policy-switch-config.el"
+  "File to save and restore policies from."
+  :type 'file
+  :group 'policy-switch)
 
 (defcustom policy-switch-live-buffer-modes-restore
   '(gnus-summary-mode gnus-article-mode bbdb-mode dictionary-mode help-mode)
@@ -107,22 +113,23 @@ Valid values are:
   :type 'boolean
   :group 'policy-switch)
   
-(defcustom policy-switch-buffer-mode-handlers '((w3m-mode . policy-switch-buffer-info-w3m)
-						(gnus-summary-mode . policy-switch-buffer-info-gnus)
-						(bbdb-mode . policy-switch-buffer-info-bbdb)
-						(help-mode . policy-switch-buffer-info-help)
-						(dictionary-mode . policy-switch-buffer-info-dictionary)
-						(gnus-article-mode . policy-switch-buffer-info-gnus))
+(defcustom policy-switch-buffer-mode-handlers
+  '((w3m-mode . policy-switch-buffer-info-w3m)
+    (gnus-summary-mode . policy-switch-buffer-info-gnus)
+    (bbdb-mode . policy-switch-buffer-info-bbdb)
+    (help-mode . policy-switch-buffer-info-help)
+    (dictionary-mode . policy-switch-buffer-info-dictionary)
+    (gnus-article-mode . policy-switch-buffer-info-gnus))
   "Alist of handler functions for buffer major modes.
 When a config is created this list is used to determine what function
-should have the responsibilty of creating buffer recover
-strings (if buffer is restorable by desktop, desktop takes
-precedence and this variable is not used). The string must be
-parsable by the Lisp interpreter and is evaluated whenever a
-config, whose buffers have their matching major-modes included,
-needs to be restored.  The buffer from which the restore string
-must be created is current in the call.  Functions take no
-arguments and must return the restored buffer object."
+should have the responsibilty of creating buffer recover strings
+ (if buffer is restorable by desktop, desktop takes precedence,
+ and this variable is not used). The string must be parsable by the
+Lisp interpreter and is evaluated whenever a config, whose buffers
+have their matching major-modes included, needs to be restored.
+The buffer from which the restore string must be created is current
+in the call.  Functions take no arguments and must return the restored
+buffer object."
   :type '(alist :key-type (symbol :tag "Mode") :value-type function)
   :group 'policy-switch)
 
@@ -139,7 +146,6 @@ arguments and must return the restored buffer object."
     (error "Policy already exists"))
   (setq policy-switch-policies-list (append (list (list name ())) policy-switch-policies-list))
   (message "Policy \"%s\" added" name))
-
 
 (defun policy-switch-policy-remove (name)
   "Remove a policy given by NAME from policy-switch."
@@ -179,7 +185,6 @@ policy do not exist or if policy list is empty."
 	      (error "Policy \"%s\" do not exist" policy-name)
 	    policy))
       (error "No policies defined"))))
-  
 
 (defun policy-switch-configs-get (policy &optional raise-error-p)
   "Get the configs list specified by POLICY (policy is assumed to
@@ -202,7 +207,6 @@ RAISE-ERROR-P is non-nil, report error if configs list is empty."
 	(error "Config \"%s\" do not exist" configname)
       config)))
 
-
 (defun policy-switch-config-window-obj (&optional config)
   "Retrieve window config object from `CONFIG', if given.
 Otherwise, get window config object from current config in
@@ -221,14 +225,12 @@ Otherwise, get window data from current config in current policy."
 		  config)))
     (caddr config)))
 
-
 (defun policy-switch-configs-list-make-empty (&optional policy-name)
   "Remove all configs in policy `POLICY', if given.
 Otherwise, remove all configs in current policy."
   (interactive)
   (let ((policy (policy-switch-policy-get policy-name)))
     (setcdr policy nil)))    
-
 
 (defun policy-switch-config-add (name)
   "Add current config to current policy) and assign `NAME'."
@@ -245,7 +247,6 @@ Otherwise, remove all configs in current policy."
     (setcdr policy (list configs))
     (message "Config \"%s\" added to policy \"%s\"" name (car policy))))
 
-
 (defun policy-switch-window-info (&optional config-win-data)
   "Get window data from current window configuration."
   (let ((window-data ()))
@@ -260,7 +261,6 @@ Otherwise, remove all configs in current policy."
 	(setq window-data (append window-data
 				  (list buffer-data)))))
     window-data))
-
 
 (defun policy-switch-config-remove (name)
   "Remove config with `NAME' from current policy."
@@ -282,7 +282,6 @@ Otherwise, remove all configs in current policy."
     (setq configs (remove config configs))
     (setcdr policy (list configs))
     (message "Config \"%s\" removed from policy \"%s\"" name (car policy))))
-   
 
 ;; Navigation functions
 (defun policy-switch-policy-next ()
@@ -308,11 +307,11 @@ Otherwise, remove all configs in current policy."
 	(policy-switch-set-window-configuration))
     (error "Policy list is empty")))
 
+;; TODO
 (defun policy-switch-pos-policy (policy-name)
   "Index of policy with `POLICY-NAME' in the policy-list."
   (when (not policy-switch-policies-list)
     (error "No policies defined")))
-
 
 (defun policy-switch-policy-goto (policy-name)
   "Goto policy by name."
@@ -330,11 +329,12 @@ Otherwise, remove all configs in current policy."
 	 (pos-elem (position policy
 			     policy-switch-policies-list)))
     (when (> (length policy-switch-policies-list) 1)
-      (setq policy-switch-policies-list (append (subseq policy-switch-policies-list
-							pos-elem)
-						(subseq policy-switch-policies-list
-							0
-							pos-elem))))
+      (setq policy-switch-policies-list
+	    (append (subseq policy-switch-policies-list
+			    pos-elem)
+		    (subseq policy-switch-policies-list
+			    0
+			    pos-elem))))
     (policy-switch-set-window-configuration)))
 
 ;; config navigation functions
@@ -361,7 +361,6 @@ Otherwise, remove all configs in current policy."
       (setcdr policy (list configs)))
     (policy-switch-set-window-configuration)))
   
-
 (defun policy-switch-config-goto (config-name &optional policy-name)
   "Switch to config `CONFIG-NAME' (if interactively called,provide auto-completion) in policy `POLICY-NAME' (defaults to current policy)."
   (interactive
@@ -409,7 +408,6 @@ Otherwise, remove all configs in current policy."
 	  (message "Config: \"%s\" in policy \"%s\"" config-name (car policy)))
       (message "Policy \"%s\" do not have any configs" (car policy)))))
 
-
 (defun policy-switch-config-needs-restoring (&optional name policy-name)
   "Check if config with `NAME' in policy with `POLICY-NAME' needs restoring.
 Defaults to current config in current policy.
@@ -422,7 +420,25 @@ Return nil if restoring is needed, false otherwise."
 	(when (policy-switch-buffer-restore-p buf-object)
 	  (throw 'needs-restoring t))))
     nil))
-	 
+
+(defun policy-switch-save-policies nil
+  "Save all policies into `policy-switch-save-file'."
+  (interactive)
+  (save-sexp-save-setq
+   policy-switch-save-file
+   'policy-switch-policies-list
+   nil nil
+   (cl-subst nil 'anywinorbuffer policy-switch-policies-list
+	     :test (lambda (a b) (or (bufferp a) (bufferp b)
+				     (window-configuration-p a)
+				     (window-configuration-p b))))))
+
+(defun policy-switch-load-policies nil
+  "Load all saved policies from `policy-switch-save-file'."
+  (interactive)
+  (if (file-readable-p policy-switch-save-file)
+      (load-file policy-switch-save-file)
+    (error "Can't read file: %s" policy-switch-save-file)))
 
 (defun policy-switch-config-restore (&optional name policy-name)
   "Restore config with `NAME' in policy with `POLICY-NAME'(Config
@@ -453,13 +469,11 @@ defaults to current config in current policy)."
     (dolist (config configs)
       (policy-switch-config-restore (car config) policy-name))))
 
-
 (defun policy-switch-policies-restore ()
   "Restore policies."
   (save-window-excursion
     (dolist (policy policy-switch-policies-list)
       (policy-switch-policy-restore (car policy)))))
-
 
 (defun policy-switch-config-split-windows (config-data)
   "Restore policy config from `CONFIG-DATA'."
@@ -508,7 +522,6 @@ defaults to current config in current policy)."
 	      split-num 0)))
     not-restorable))
 
-
 (defun policy-switch-buffer-restore-p (buffer-obj)
   "Returns non-nil if buffer given by BUFFER-OBJ should be
 restored."
@@ -516,7 +529,6 @@ restored."
       (null buf-object)
       (find (cdr (assoc 'major-mode (buffer-local-variables buffer-obj)))
 	    policy-switch-live-buffer-modes-restore)))
-    
 
 (defun policy-switch-config-restore-buffer (restore-string buf-name) 
   "Restore buffer with `RESTORE-STRING'."
@@ -624,7 +636,6 @@ function to call."
 	    "(cdr buf-data)\n"
 	    "nil))\n"
 	    "(winner-win-data))))))))\n\n")))
-
 
 (defun policy-switch-buffer-info-gnus ()
   "Restorable buffer info for gnus article and gnus summary
