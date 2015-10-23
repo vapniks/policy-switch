@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-23 16:02:54 ben>
+;; Time-stamp: <2015-10-23 16:10:54 ben>
 
 ;; This file is part of policy-switch.
 
@@ -464,7 +464,8 @@ Return nil if restoring is needed, false otherwise."
 
 ;;;###autoload
 (defun remove-unreadable (tree)
-  "Remove unreadable objects from TREE."
+  "Remove unreadable objects from TREE.
+Return value has the same structure as TREE but with all unreadable objects removed."
   (cl-subst nil 'anywinorbuffer tree
 	    :test (lambda (a b)
 		    (condition-case err
