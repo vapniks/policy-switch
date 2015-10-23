@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-23 03:24:42 ben>
+;; Time-stamp: <2015-10-23 12:59:53 ben>
 
 ;; This file is part of policy-switch.
 
@@ -75,27 +75,32 @@
 (require 'desktop)
 (require 'save-sexp)
 
+;;;###autoload
 (defgroup policy-switch nil
   "Window configuration navigation utility."
   :prefix "policy-switch-"
   :group 'convenience)
 
+;;;###autoload
 (defvar policy-switch-policies-list ()
   "List of all policies maintained by policy-switch. The list has the following form:
 \(<current-policy-name> ((<policy-name> . (<current-config-name> ((<window-config-name> .
       <window-config-obj> <window-data>))))))")
 
+;;;###autoload
 (defcustom policy-switch-save-file "~/.emacs.d/.policy-switch-config.el"
   "File to save and restore policies from."
   :type 'file
   :group 'policy-switch)
 
+;;;###autoload
 (defcustom policy-switch-live-buffer-modes-restore
   '(gnus-summary-mode gnus-article-mode bbdb-mode dictionary-mode help-mode)
   "List of major modes that needs to be restored in spite of a live buffer object being present."
   :type '(list symbol)
   :group 'policy-switch)
-  
+
+;;;###autoload
 (defcustom policy-switch-config-restore-policy 'needs-restoring
   "Specifies when to restore the config when selected.  
 Valid values are:
@@ -108,11 +113,13 @@ Valid values are:
 		 (const never))
   :group 'policy-switch)
 
+;;;###autoload
 (defcustom policy-switch-mode-line-p t
   "Whether policy status should be shown in the mode line."
   :type 'boolean
   :group 'policy-switch)
-  
+
+;;;###autoload
 (defcustom policy-switch-buffer-mode-handlers
   '((w3m-mode . policy-switch-buffer-info-w3m)
     (gnus-summary-mode . policy-switch-buffer-info-gnus)
@@ -133,12 +140,15 @@ buffer object."
   :type '(alist :key-type (symbol :tag "Mode") :value-type function)
   :group 'policy-switch)
 
+;;;###autoload
 (defvar policy-switch-mode-line-elm nil)
 
+;;;###autoload
 (defun policy-switch-policies-list-make-empty ()
   "Make policy list empty."
   (setq policy-switch-policies-list nil))
 
+;;;###autoload
 (defun policy-switch-policy-add (name)
   "Add a policy with `NAME' to policy-switch."
   (interactive "MPolicy name: ")
@@ -147,6 +157,7 @@ buffer object."
   (setq policy-switch-policies-list (append (list (list name ())) policy-switch-policies-list))
   (message "Policy \"%s\" added" name))
 
+;;;###autoload
 (defun policy-switch-policy-remove (name)
   "Remove a policy given by NAME from policy-switch."
   (interactive
@@ -171,9 +182,10 @@ buffer object."
     (message "Policy \"%s\" removed" name)))
 
 ;; getter's and setter's for policy list internals
+;;;###autoload
 (defun policy-switch-policy-get (&optional policy-name)
-  "Get the policy list specified by POLICY-NAME.  Report error if
-policy do not exist or if policy list is empty."
+  "Get the policy list specified by POLICY-NAME.  
+Report error if policy do not exist or if policy list is empty."
   (let ((policy nil))
     (setq policy-name (if (not policy-name)
 			  (caar policy-switch-policies-list)
@@ -186,6 +198,7 @@ policy do not exist or if policy list is empty."
 	    policy))
       (error "No policies defined"))))
 
+;;;###autoload
 (defun policy-switch-configs-get (policy &optional raise-error-p)
   "Get the configs list specified by POLICY (policy is assumed to
 exist and extracted from call to `policy-switch-policy-get').If
@@ -196,6 +209,7 @@ RAISE-ERROR-P is non-nil, report error if configs list is empty."
 	(error "Configs list is empty in policy \"%s\"" (car policy))
       configs-list)))
 
+;;;###autoload
 (defun policy-switch-config-get (configname configs-list &optional raise-error-p)
   "Get the config specified by `CONFIGNAME' in the `CONFIGS-LIST'."
   (let* ((configname (if (not configname)
@@ -207,6 +221,7 @@ RAISE-ERROR-P is non-nil, report error if configs list is empty."
 	(error "Config \"%s\" do not exist" configname)
       config)))
 
+;;;###autoload
 (defun policy-switch-config-window-obj (&optional config)
   "Retrieve window config object from `CONFIG', if given.
 Otherwise, get window config object from current config in
@@ -216,6 +231,7 @@ current policy."
 		  config)))
     (cadr config)))
 
+;;;###autoload
 (defun policy-switch-config-win-data (&optional config)
   "Retrieve window data from `CONFIG', if given.
 Otherwise, get window data from current config in current policy."
@@ -225,6 +241,7 @@ Otherwise, get window data from current config in current policy."
 		  config)))
     (caddr config)))
 
+;;;###autoload
 (defun policy-switch-configs-list-make-empty (&optional policy-name)
   "Remove all configs in policy `POLICY', if given.
 Otherwise, remove all configs in current policy."
@@ -232,6 +249,7 @@ Otherwise, remove all configs in current policy."
   (let ((policy (policy-switch-policy-get policy-name)))
     (setcdr policy nil)))    
 
+;;;###autoload
 (defun policy-switch-config-add (name)
   "Add current config to current policy) and assign `NAME'."
   (interactive
@@ -247,6 +265,7 @@ Otherwise, remove all configs in current policy."
     (setcdr policy (list configs))
     (message "Config \"%s\" added to policy \"%s\"" name (car policy))))
 
+;;;###autoload
 (defun policy-switch-window-info (&optional config-win-data)
   "Get window data from current window configuration."
   (let ((window-data ()))
@@ -262,6 +281,7 @@ Otherwise, remove all configs in current policy."
 				  (list buffer-data)))))
     window-data))
 
+;;;###autoload
 (defun policy-switch-config-remove (name)
   "Remove config with `NAME' from current policy."
   (interactive
@@ -284,10 +304,13 @@ Otherwise, remove all configs in current policy."
     (message "Config \"%s\" removed from policy \"%s\"" name (car policy))))
 
 ;; Navigation functions
+;;;###autoload
 (defun policy-switch-policy-next ()
   "Switch to next policy."
   (interactive)
-  (if policy-switch-policies-list
+  (if (or policy-switch-policies-list
+		 (and (y-or-n-p "No policies loaded. Load now? ")
+		      (policy-switch-load-policies)))
       (progn
 	(when (> (length policy-switch-policies-list) 1)
 	  (setq policy-switch-policies-list (append (list (nth 1 policy-switch-policies-list))
@@ -296,10 +319,13 @@ Otherwise, remove all configs in current policy."
 	(policy-switch-set-window-configuration))
     (error "Policy list is empty")))
 
+;;;###autoload
 (defun policy-switch-policy-prev ()
   "Switch to next policy."
   (interactive)
-  (if policy-switch-policies-list
+  (if (or policy-switch-policies-list
+	  (and (y-or-n-p "No policies loaded. Load now? ")
+	       (policy-switch-load-policies)))
       (progn
 	(when (> (length policy-switch-policies-list) 1)
 	  (setq policy-switch-policies-list (append (last policy-switch-policies-list)
@@ -308,22 +334,24 @@ Otherwise, remove all configs in current policy."
     (error "Policy list is empty")))
 
 ;; TODO
+;;;###autoload
 (defun policy-switch-pos-policy (policy-name)
   "Index of policy with `POLICY-NAME' in the policy-list."
   (when (not policy-switch-policies-list)
     (error "No policies defined")))
 
+;;;###autoload
 (defun policy-switch-policy-goto (policy-name)
-  "Goto policy by name."
+  "Goto policy POLICY-NAME (prompted for when called interactively)."
   (interactive
    ;; FIXME: Should work a' la' config-goto
-   (list (if policy-switch-policies-list
+   (list (if (or policy-switch-policies-list
+		 (and (y-or-n-p "No policies loaded. Load now? ")
+		      (policy-switch-load-policies)))
 	     (completing-read "Goto policy: " 
-			      (mapcar (lambda (policy)
-					(car policy))
+			      (mapcar (lambda (policy) (car policy))
 				      policy-switch-policies-list)
-			      nil
-			      t)
+			      nil t)
 	   nil)))
   (let* ((policy (policy-switch-policy-get policy-name))
 	 (pos-elem (position policy
@@ -338,43 +366,56 @@ Otherwise, remove all configs in current policy."
     (policy-switch-set-window-configuration)))
 
 ;; config navigation functions
+;;;###autoload
 (defun policy-switch-config-next (&optional policy-name)
   "Switch to next config in policy `POLICY-NAME' (defaults to current policy)."
   (interactive)
-  (let* ((policy (policy-switch-policy-get policy-name))
-	 (configs (policy-switch-configs-get policy t)))
-    (when (> (length configs) 1)
-      (setq configs (append (list (nth 1 configs))
-			    (nthcdr 2 configs)
-			    (list (car configs))))
-      (setcdr policy (list configs)))
-    (policy-switch-set-window-configuration)))
-  
-(defun policy-switch-config-prev (&optional policy-name)   
+  (if (or policy-switch-policies-list
+	  (and (y-or-n-p "No policies loaded. Load now? ")
+	       (policy-switch-load-policies)))
+      (let* ((policy (policy-switch-policy-get policy-name))
+	     (configs (policy-switch-configs-get policy t)))
+	(when (> (length configs) 1)
+	  (setq configs (append (list (nth 1 configs))
+				(nthcdr 2 configs)
+				(list (car configs))))
+	  (setcdr policy (list configs)))
+	(policy-switch-set-window-configuration))))
+
+;;;###autoload
+(defun policy-switch-config-prev (&optional policy-name)
   "Switch to previous config in policy `POLICY-NAME' (defaults to current policy)."
   (interactive)
-  (let* ((policy (policy-switch-policy-get policy-name))
-	 (configs (policy-switch-configs-get policy t)))
-    (when (> (length configs) 1)
-      (setq configs (append (last configs)
-			    (butlast configs 1)))
-      (setcdr policy (list configs)))
-    (policy-switch-set-window-configuration)))
-  
+  (if (or policy-switch-policies-list
+	  (and (y-or-n-p "No policies loaded. Load now? ")
+	       (policy-switch-load-policies)))
+      (let* ((policy (policy-switch-policy-get policy-name))
+	     (configs (policy-switch-configs-get policy t)))
+	(when (> (length configs) 1)
+	  (setq configs (append (last configs)
+				(butlast configs 1)))
+	  (setcdr policy (list configs)))
+	(policy-switch-set-window-configuration))))
+
+;;;###autoload
 (defun policy-switch-config-goto (config-name &optional policy-name)
-  "Switch to config `CONFIG-NAME' (if interactively called,provide auto-completion) in policy `POLICY-NAME' (defaults to current policy)."
+  "Switch to config `CONFIG-NAME' in policy `POLICY-NAME'.
+When called interactively the current policy is used."
   (interactive
-   (list (if policy-switch-policies-list
+   (list (if (or policy-switch-policies-list
+		 (and (y-or-n-p "No policies loaded. Load now? ")
+		      (policy-switch-load-policies)))
 	     (cond ((<= (length (policy-switch-configs-get (policy-switch-policy-get))) 1)
 		    (caar (policy-switch-configs-get (policy-switch-policy-get))))
 		   (t
-		    (completing-read "Goto config: " 
+		    (completing-read "Goto config: "
 				     (mapcar (lambda (config)
 					       (car config))
 					     (policy-switch-configs-get (policy-switch-policy-get)))
 				     nil t nil nil (caar (policy-switch-configs-get (policy-switch-policy-get)))
 				     t)))
-	   nil)))
+	   (error "Unable to load policies"))
+	 nil))
   (let* ((policy (policy-switch-policy-get policy-name))
 	 (configs (policy-switch-configs-get policy t))
 	 (config (policy-switch-config-get config-name configs t))
@@ -388,6 +429,7 @@ Otherwise, remove all configs in current policy."
       (setcdr policy (list configs)))
     (policy-switch-set-window-configuration)))
 
+;;;###autoload
 (defun policy-switch-set-window-configuration ()
   "Set the window configuration to the value of the current config in the current policy."
   (let* ((policy (policy-switch-policy-get))
@@ -408,6 +450,7 @@ Otherwise, remove all configs in current policy."
 	  (message "Config: \"%s\" in policy \"%s\"" config-name (car policy)))
       (message "Policy \"%s\" do not have any configs" (car policy)))))
 
+;;;###autoload
 (defun policy-switch-config-needs-restoring (&optional name policy-name)
   "Check if config with `NAME' in policy with `POLICY-NAME' needs restoring.
 Defaults to current config in current policy.
@@ -421,6 +464,7 @@ Return nil if restoring is needed, false otherwise."
 	  (throw 'needs-restoring t))))
     nil))
 
+;;;###autoload
 (defun policy-switch-save-policies nil
   "Save all policies into `policy-switch-save-file'."
   (interactive)
@@ -433,6 +477,7 @@ Return nil if restoring is needed, false otherwise."
 				     (window-configuration-p a)
 				     (window-configuration-p b))))))
 
+;;;###autoload
 (defun policy-switch-load-policies nil
   "Load all saved policies from `policy-switch-save-file'."
   (interactive)
@@ -440,6 +485,7 @@ Return nil if restoring is needed, false otherwise."
       (load-file policy-switch-save-file)
     (error "Can't read file: %s" policy-switch-save-file)))
 
+;;;###autoload
 (defun policy-switch-config-restore (&optional name policy-name)
   "Restore config with `NAME' in policy with `POLICY-NAME'(Config
 defaults to current config in current policy)."
@@ -462,6 +508,7 @@ defaults to current config in current policy)."
 		 "All buffers restored"
 	       "%s buffer(s) failed to restore" (length restorable)))))
 
+;;;###autoload
 (defun policy-switch-policy-restore (policy-name)
   "Restore policy with POLICY-NAME."
   (let* ((policy (policy-switch-policy-get policy-name))
@@ -469,12 +516,14 @@ defaults to current config in current policy)."
     (dolist (config configs)
       (policy-switch-config-restore (car config) policy-name))))
 
+;;;###autoload
 (defun policy-switch-policies-restore ()
   "Restore policies."
   (save-window-excursion
     (dolist (policy policy-switch-policies-list)
       (policy-switch-policy-restore (car policy)))))
 
+;;;###autoload
 (defun policy-switch-config-split-windows (config-data)
   "Restore policy config from `CONFIG-DATA'."
   (let ((index 0)
@@ -522,6 +571,7 @@ defaults to current config in current policy)."
 	      split-num 0)))
     not-restorable))
 
+;;;###autoload
 (defun policy-switch-buffer-restore-p (buffer-obj)
   "Returns non-nil if buffer given by BUFFER-OBJ should be
 restored."
@@ -530,6 +580,7 @@ restored."
       (find (cdr (assoc 'major-mode (buffer-local-variables buffer-obj)))
 	    policy-switch-live-buffer-modes-restore)))
 
+;;;###autoload
 (defun policy-switch-config-restore-buffer (restore-string buf-name) 
   "Restore buffer with `RESTORE-STRING'."
   (cond (restore-string
@@ -537,6 +588,7 @@ restored."
 	   (eval (read restore-string))))
 	(buf-name (get-buffer-create buf-name))))
 
+;;;###autoload
 (defun policy-switch-buffer-info-string (buffer)
   "Get restorable info in string form for BUFFER.  String must be
 parsable by the Lisp interpreter.  Use desktop to retrieve
@@ -578,6 +630,7 @@ function to call."
 		   (concat "(find-file \"" (buffer-file-name) "\")\n"
 			   "(current-buffer)\n\n")))))))
 
+;;;###autoload
 (defun policy-switch-buffer-info-w3m ()
   "Restorable buffer info for w3m buffers."
   (concat "(progn\n"
@@ -586,6 +639,7 @@ function to call."
 	  "(w3m-goto-url-new-session \"" w3m-current-url "\")\n"
 	  "(current-buffer)))\n\n"))
 
+;;;###autoload
 (defun policy-switch-buffer-info-dictionary ()
   "Restorable buffer info for dictionary buffers."
   (save-excursion
@@ -598,6 +652,7 @@ function to call."
 	      "(dictionary-search \"" (current-word) "\")\n"
 	      "(current-buffer)))\n\n"))))
 
+;;;###autoload
 (defun policy-switch-buffer-info-help ()
   "Restorable buffer info for *help* buffers."
   (save-excursion
@@ -621,6 +676,7 @@ function to call."
 	      "nil))\n"
 	      "(winner-win-data))))))\n\n"))))
 
+;;;###autoload
 (defun policy-switch-buffer-info-bbdb ()
   "Restorable buffer info for *help* buffers."
   (when (featurep 'planner-bbdb)
@@ -637,6 +693,7 @@ function to call."
 	    "nil))\n"
 	    "(winner-win-data))))))))\n\n")))
 
+;;;###autoload
 (defun policy-switch-buffer-info-gnus ()
   "Restorable buffer info for gnus article and gnus summary
 buffers."
@@ -654,6 +711,7 @@ buffers."
 	    "nil))\n"
 	    "(winner-win-data))))))))\n\n")))
 
+;;;###autoload
 (defun policy-switch-buffer-info (buffer)
   "Retrieve buffer info from BUFFER."
   (set-buffer buffer)
@@ -694,6 +752,7 @@ buffers."
        (setq locals (cdr locals)))
      ll)))
 
+;;;###autoload
 (defun policy-switch-remove-unprintable-entities ()
   "Remove unprintable entities from policy-switch-policies-list."
   (dolist (policy policy-switch-policies-list)
@@ -707,6 +766,7 @@ buffers."
 	(dolist (buffer-data (policy-switch-config-win-data config))
 	  (setcar (cdr buffer-data) nil))))))
 
+;;;###autoload
 (defun policy-switch-toggle-mode-line ()
   "Toggle mode line."
   (interactive)
