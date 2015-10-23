@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-23 13:17:58 ben>
+;; Time-stamp: <2015-10-23 13:32:55 ben>
 
 ;; This file is part of policy-switch.
 
@@ -335,12 +335,14 @@ Optional argument CONFIG-WIN-DATA is a list of window data."
 	(policy-switch-set-window-configuration))
     (error "Policy list is empty")))
 
-;; TODO
 ;;;###autoload
 (defun policy-switch-pos-policy (policy-name)
   "Index of policy with `POLICY-NAME' in the policy-list."
   (when (not policy-switch-policies-list)
-    (error "No policies defined")))
+    (error "No policies defined"))
+  (cl-position policy-name
+	       policy-switch-policies-list
+	       :key 'car :test 'equal))
 
 ;;;###autoload
 (defun policy-switch-policy-goto (policy-name)
@@ -410,12 +412,13 @@ When called interactively the current policy is used."
 	     (cond ((<= (length (policy-switch-configs-get (policy-switch-policy-get))) 1)
 		    (caar (policy-switch-configs-get (policy-switch-policy-get))))
 		   (t
-		    (ido-completing-read "Goto config: "
-					 (mapcar (lambda (config)
-						   (car config))
-						 (policy-switch-configs-get (policy-switch-policy-get)))
-					 nil t nil nil (caar (policy-switch-configs-get (policy-switch-policy-get)))
-					 t)))
+		    (ido-completing-read
+		     "Goto config: "
+		     (mapcar (lambda (config)
+			       (car config))
+			     (policy-switch-configs-get (policy-switch-policy-get)))
+		     nil t nil nil (caar (policy-switch-configs-get (policy-switch-policy-get)))
+		     t)))
 	   (error "Unable to load policies"))
 	 nil))
   (let* ((policy (policy-switch-policy-get policy-name))
