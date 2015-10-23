@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-23 13:32:55 ben>
+;; Time-stamp: <2015-10-23 13:47:42 ben>
 
 ;; This file is part of policy-switch.
 
@@ -334,15 +334,6 @@ Optional argument CONFIG-WIN-DATA is a list of window data."
 						    (butlast policy-switch-policies-list 1))))
 	(policy-switch-set-window-configuration))
     (error "Policy list is empty")))
-
-;;;###autoload
-(defun policy-switch-pos-policy (policy-name)
-  "Index of policy with `POLICY-NAME' in the policy-list."
-  (when (not policy-switch-policies-list)
-    (error "No policies defined"))
-  (cl-position policy-name
-	       policy-switch-policies-list
-	       :key 'car :test 'equal))
 
 ;;;###autoload
 (defun policy-switch-policy-goto (policy-name)
