@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-23 16:10:54 ben>
+;; Time-stamp: <2015-10-24 23:25:21 ben>
 
 ;; This file is part of policy-switch.
 
@@ -436,7 +436,6 @@ When called interactively the current policy is used."
 	 (config-name (car config))
 	 (config-obj (policy-switch-config-window-obj))
 	 (config-win-data (policy-switch-config-win-data config)))
-    
     (when (or (equal policy-switch-config-restore-policy 'always)
 	      (and (equal policy-switch-config-restore-policy 'needs-restoring)
 		   (policy-switch-config-needs-restoring config-name (car policy))))
@@ -511,7 +510,7 @@ defaults to current config in current policy)."
     (setcdr policy (list configs))
     (message (if (= (length restorable) 0)
 		 "All buffers restored"
-	       "%s buffer(s) failed to restore" (length restorable)))))
+	       (format "%s buffer(s) failed to restore" (length restorable))))))
 
 ;;;###autoload
 (defun policy-switch-policy-restore (policy-name)
