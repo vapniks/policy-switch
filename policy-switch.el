@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-24 23:25:21 ben>
+;; Time-stamp: <2015-10-24 23:46:23 ben>
 
 ;; This file is part of policy-switch.
 
@@ -462,24 +462,13 @@ Return nil if restoring is needed, false otherwise."
     nil))
 
 ;;;###autoload
-(defun remove-unreadable (tree)
-  "Remove unreadable objects from TREE.
-Return value has the same structure as TREE but with all unreadable objects removed."
-  (cl-subst nil 'anywinorbuffer tree
-	    :test (lambda (a b)
-		    (condition-case err
-			(and (atom b)
-			     (read (format "%S" b))
-			     nil)
-		      (error t)))))
-
-;;;###autoload
 (defun policy-switch-save-policies nil
   "Save all policies into `policy-switch-save-file'."
   (interactive)
+  (policy-switch-remove-unprintable-entities)
   (save-sexp-save-setq policy-switch-save-file
    'policy-switch-policies-list
-   nil nil (remove-unreadable policy-switch-policies-list)))
+   nil nil policy-switch-policies-list))
 
 ;;;###autoload
 (defun policy-switch-load-policies nil
@@ -510,7 +499,8 @@ defaults to current config in current policy)."
     (setcdr policy (list configs))
     (message (if (= (length restorable) 0)
 		 "All buffers restored"
-	       (format "%s buffer(s) failed to restore" (length restorable))))))
+	       (format "%s buffer(s) failed to restore"
+		       (length restorable))))))
 
 ;;;###autoload
 (defun policy-switch-policy-restore (policy-name)
