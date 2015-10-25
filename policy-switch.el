@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-24 23:46:23 ben>
+;; Time-stamp: <2015-10-25 06:58:25 ben>
 
 ;; This file is part of policy-switch.
 
@@ -275,11 +275,9 @@ Optional argument CONFIG-WIN-DATA is a list of window data."
 	     (old-win-data (assoc (car buffer-data) config-win-data)))
 	(setcdr buffer-data (list buffer-obj (if old-win-data
 						 (nth (- (length old-win-data) 2) old-win-data)
-					       (policy-switch-buffer-info-string
-						buffer-obj))
+					       (policy-switch-buffer-info-string buffer-obj))
 				  (buffer-name buffer-obj)))
-	(setq window-data (append window-data
-				  (list buffer-data)))))
+	(setq window-data (append window-data (list buffer-data)))))
     window-data))
 
 ;;;###autoload
@@ -480,7 +478,7 @@ Return nil if restoring is needed, false otherwise."
 
 ;;;###autoload
 (defun policy-switch-config-restore (&optional name policy-name)
-  "Restore config with `NAME' in policy with `POLICY-NAME'(Config
+  "Restore config with `NAME' in policy with `POLICY-NAME' (Config
 defaults to current config in current policy)."
   (interactive)
   (let* ((policy (policy-switch-policy-get policy-name))
@@ -748,7 +746,7 @@ buffers."
 
 ;;;###autoload
 (defun policy-switch-remove-unprintable-entities ()
-  "Remove unprintable entities from policy-switch-policies-list."
+  "Remove unprintable entities from `policy-switch-policies-list'."
   (dolist (policy policy-switch-policies-list)
     (let* ((configs (policy-switch-configs-get policy))
 	   (config (policy-switch-config-get nil configs))
