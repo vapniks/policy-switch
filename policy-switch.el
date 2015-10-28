@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-25 06:58:25 ben>
+;; Time-stamp: <2015-10-28 08:46:29 ben>
 
 ;; This file is part of policy-switch.
 
@@ -185,7 +185,7 @@ buffer object."
 ;;;###autoload
 (defun policy-switch-policy-get (&optional policy-name)
   "Get the policy list specified by POLICY-NAME.  
-Report error if policy do not exist or if policy list is empty."
+Report error if policy does not exist or if policy list is empty."
   (let ((policy nil))
     (setq policy-name (if (not policy-name)
 			  (caar policy-switch-policies-list)
@@ -194,7 +194,7 @@ Report error if policy do not exist or if policy list is empty."
 	(progn
 	  (setq policy (assoc-string policy-name policy-switch-policies-list))
 	  (if (not policy)
-	      (error "Policy \"%s\" do not exist" policy-name)
+	      (error "Policy \"%s\" does not exist" policy-name)
 	    policy))
       (error "No policies defined"))))
 
@@ -218,7 +218,7 @@ RAISE-ERROR-P is non-nil, report error if configs list is empty."
 	 (config (assoc-string configname configs-list)))
     (if (and raise-error-p
 	     (not config))
-	(error "Config \"%s\" do not exist" configname)
+	(error "Config \"%s\" does not exist" configname)
       config)))
 
 ;;;###autoload
@@ -490,6 +490,7 @@ defaults to current config in current policy)."
       (policy-switch-remove-unprintable-entities))
     (delete-other-windows)
     (setq restorable (policy-switch-config-split-windows config-win-data))
+    ;; reset config info to correspond with restored window config
     (setq configs (append (list (list (car config)
 				      (current-window-configuration)
 				      (policy-switch-window-info config-win-data)))
@@ -529,7 +530,7 @@ defaults to current config in current policy)."
 	     (buf-object (car buffer-data))
 	     (restore-string (nth (- (length buffer-data) 2) buffer-data))
 	     (buf-name (car (last buffer-data))))
-	;; split until first horizantal or vertical border or end reached
+	;; split until first horizontal or vertical border or end reached
 	(dolist (buf-data (nthcdr (1+ index) config-data))
 	  (when (< split-num 2)
             ;; I should split vertically
@@ -539,7 +540,7 @@ defaults to current config in current policy)."
 							 (nth 1 win-data))
 						  nil))
 		   (setq split-num (1+ split-num)))
-		  ;; I should split horizontally 
+		  ;; I should split horizontally
 		  ((and (not hoz-split)
 			(= (nth 1 win-data) (nth 1 (car buf-data))))
 		   (setq hoz-split (split-window nil (- (caar buf-data)
@@ -565,27 +566,26 @@ defaults to current config in current policy)."
 
 ;;;###autoload
 (defun policy-switch-buffer-restore-p (buffer-obj)
-  "Returns non-nil if buffer given by BUFFER-OBJ should be
-restored."
+  "Return non-nil if buffer given by BUFFER-OBJ should be restored."
   (or (not (buffer-live-p buf-object))
       (null buf-object)
       (find (cdr (assoc 'major-mode (buffer-local-variables buffer-obj)))
 	    policy-switch-live-buffer-modes-restore)))
 
 ;;;###autoload
-(defun policy-switch-config-restore-buffer (restore-string buf-name) 
-  "Restore buffer with `RESTORE-STRING'."
-  (cond (restore-string
+(defun policy-switch-config-restore-buffer (restore-string buf-name)
+  "Use RESTORE-STRING to restore buffer BUF-NAME."
+  (cond (buf-name (get-buffer-create buf-name))
+	(restore-string
 	 (save-window-excursion
-	   (eval (read restore-string))))
-	(buf-name (get-buffer-create buf-name))))
+	   (eval (read restore-string))))))
 
 ;;;###autoload
 (defun policy-switch-buffer-info-string (buffer)
-  "Get restorable info in string form for BUFFER.  String must be
-parsable by the Lisp interpreter.  Use desktop to retrieve
-restore info (if `desktop-save-buffer-p' returns non-nil).
-Otherwise, look in `policy-switch-mode-handlers' for appropriate
+  "Get restorable info in string form for BUFFER.
+String must be parsable by the Lisp interpreter.
+Use desktop to retrieve restore info (if `desktop-save-buffer-p' returns
+non-nil). Otherwise, look in `policy-switch-mode-handlers' for appropriate
 function to call."
   (let* ((create-buffer-string)
 	 (buffer-info (policy-switch-buffer-info buffer))
@@ -593,7 +593,19 @@ function to call."
 				  (buffer-local-variables))))
 	 (restore-function (cdr (assoc buffer-mode policy-switch-buffer-mode-handlers))))
     (setq create-buffer-string
-	  (cond ((apply 'desktop-save-buffer-p buffer-info)
+	  (cond ((memq look-mode (fourth buffer-info))
+		 (format "%S" `(let ((look-buffer ',look-buffer))
+				 (setq look-reverse-file-list ',look-reverse-file-list
+				       look-current-file ',look-current-file
+				       look-forward-file-list ',look-forward-file-list
+				       look-file-settings ',look-file-settings
+				       look-subdir-list ',look-subdir-list
+				       look-hilight-subdir-index ',look-hilight-subdir-index
+				       look-pwd ',look-pwd)
+				 (switch-to-buffer look-buffer)
+				 (look-mode 1)
+				 (look-at-this-file look-current-file))))
+		((apply 'desktop-save-buffer-p buffer-info)
 		 (concat "(let ((desktop-buffer-ok-count 0)\n"
 			 "(desktop-first-buffer nil)\n"
 			 "(desktop-buffer-fail-count 0))\n"
@@ -616,8 +628,7 @@ function to call."
 			   temp-string)
 			 ")\n"
 			 "desktop-first-buffer)\n\n"))
-		(restore-function
-		 (funcall restore-function))
+		(restore-function (funcall restore-function))
 		((when (buffer-file-name)
 		   (concat "(find-file \"" (buffer-file-name) "\")\n"
 			   "(current-buffer)\n\n")))))))
