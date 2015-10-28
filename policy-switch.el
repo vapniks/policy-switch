@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-28 08:49:35 ben>
+;; Time-stamp: <2015-10-28 08:50:29 ben>
 
 ;; This file is part of policy-switch.
 
@@ -602,8 +602,10 @@ function to call."
 				       look-subdir-list ',look-subdir-list
 				       look-hilight-subdir-index ',look-hilight-subdir-index
 				       look-pwd ',look-pwd
-				       look-dired-rename-target ',look-dired-rename-target
-				       look-dired-buffer ',look-dired-buffer)
+				       look-dired-rename-target ',(if look-dired-rename-target
+								      look-dired-rename-target)
+				       look-dired-buffer ',(if look-dired-buffer
+							       look-dired-buffer))
 				 (switch-to-buffer look-buffer)
 				 (look-mode 1)
 				 (look-at-this-file look-current-file))))
