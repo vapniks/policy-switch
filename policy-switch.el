@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-10-28 08:50:29 ben>
+;; Time-stamp: <2015-11-22 17:12:27 ben>
 
 ;; This file is part of policy-switch.
 
@@ -21,7 +21,7 @@
 ;; along with GNU Emacs; see the file COPYING.  If not, write to
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
- 
+
 ;; Commentary:
 
 ;; This file allows you to navigate sets of window configurations
@@ -73,7 +73,7 @@
 (require 'cl)
 (require 'winner)
 (require 'desktop)
-(require 'save-sexp)
+(require 'pcache)
 
 ;;;###autoload
 (defgroup policy-switch nil
@@ -86,12 +86,6 @@
   "List of all policies maintained by policy-switch. The list has the following form:
 \(<current-policy-name> ((<policy-name> . (<current-config-name> ((<window-config-name> .
       <window-config-obj> <window-data>))))))")
-
-;;;###autoload
-(defcustom policy-switch-save-file "~/.emacs.d/.policy-switch-config.el"
-  "File to save and restore policies from."
-  :type 'file
-  :group 'policy-switch)
 
 ;;;###autoload
 (defcustom policy-switch-live-buffer-modes-restore
@@ -464,17 +458,16 @@ Return nil if restoring is needed, false otherwise."
   "Save all policies into `policy-switch-save-file'."
   (interactive)
   (policy-switch-remove-unprintable-entities)
-  (save-sexp-save-setq policy-switch-save-file
-   'policy-switch-policies-list
-   nil nil policy-switch-policies-list))
+  (let ((repo (pcache-repository "policy-switch")))
+    (pcache-put repo 'policies policy-switch-policies-list)
+    (pcache-save repo)))
 
 ;;;###autoload
 (defun policy-switch-load-policies nil
   "Load all saved policies from `policy-switch-save-file'."
   (interactive)
-  (if (file-readable-p policy-switch-save-file)
-      (load-file policy-switch-save-file)
-    (error "Can't read file: %s" policy-switch-save-file)))
+  (setq policy-switch-policies-list
+	(pcache-get (pcache-repository "policy-switch") 'policies)))
 
 ;;;###autoload
 (defun policy-switch-config-restore (&optional name policy-name)
@@ -593,22 +586,24 @@ function to call."
 				  (buffer-local-variables))))
 	 (restore-function (cdr (assoc buffer-mode policy-switch-buffer-mode-handlers))))
     (setq create-buffer-string
-	  (cond ((memq look-mode (fourth buffer-info))
-		 (format "%S" `(let ((look-buffer ',look-buffer))
-				 (setq look-reverse-file-list ',look-reverse-file-list
-				       look-current-file ',look-current-file
-				       look-forward-file-list ',look-forward-file-list
-				       look-file-settings ',look-file-settings
-				       look-subdir-list ',look-subdir-list
-				       look-hilight-subdir-index ',look-hilight-subdir-index
-				       look-pwd ',look-pwd
-				       look-dired-rename-target ',(if look-dired-rename-target
-								      look-dired-rename-target)
-				       look-dired-buffer ',(if look-dired-buffer
-							       look-dired-buffer))
-				 (switch-to-buffer look-buffer)
-				 (look-mode 1)
-				 (look-at-this-file look-current-file))))
+	  (cond ((memq 'look-mode (fourth buffer-info))
+		 (with-temp-buffer
+		   (second buffer-info)
+		   (format "%S" `(progn
+				   (switch-to-buffer ,(second buffer-info))
+				   (setq look-reverse-file-list ',look-reverse-file-list
+					 look-current-file ',look-current-file
+					 look-forward-file-list ',look-forward-file-list
+					 look-file-settings ',look-file-settings
+					 look-subdir-list ',look-subdir-list
+					 look-hilight-subdir-index ',look-hilight-subdir-index
+					 look-pwd ',look-pwd
+					 look-dired-rename-target ',(if look-dired-rename-target
+									look-dired-rename-target)
+					 look-dired-buffer ',(if look-dired-buffer
+								 look-dired-buffer))
+				   (look-mode 1)
+				   (look-at-this-file look-current-file)))))
 		((apply 'desktop-save-buffer-p buffer-info)
 		 (concat "(let ((desktop-buffer-ok-count 0)\n"
 			 "(desktop-first-buffer nil)\n"
@@ -800,6 +795,9 @@ buffers."
 			       0))))))
     (let ((pos (position 'mode-line-modes mode-line)))
       (setcdr mode-line (append (subseq mode-line 0 pos) (list policy-switch-mode-line-elm) (nthcdr pos mode-line))))))
+
+;; load policies
+(policy-switch-load-policies)
 
 (provide 'policy-switch)
 
