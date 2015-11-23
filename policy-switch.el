@@ -3,7 +3,7 @@
 ;; Copyright (C) 2007  Christoffer S. Hansen
 
 ;; Author: Christoffer S. Hansen <csh@freecode.dk>
-;; Time-stamp: <2015-11-22 17:12:27 ben>
+;; Time-stamp: <2015-11-23 19:09:43 ben>
 
 ;; This file is part of policy-switch.
 
@@ -33,6 +33,11 @@
 ;; .emacs:
 ;; 
 ;; (add-hook 'desktop-save-hook 'policy-switch-remove-unprintable-entities)
+;;
+;; or, if you prefer to use pcache rather than desktop:
+;;
+;; (policy-switch-load-policies)
+;; (add-hook 'kill-emacs-hook 'policy-switch-save-policies)
 ;; 
 ;; Restoring of a config within a session is automatically done when
 ;; the config's buffer objects are not alive anymore.  However, some
@@ -455,7 +460,7 @@ Return nil if restoring is needed, false otherwise."
 
 ;;;###autoload
 (defun policy-switch-save-policies nil
-  "Save all policies into `policy-switch-save-file'."
+  "Save all policies."
   (interactive)
   (policy-switch-remove-unprintable-entities)
   (let ((repo (pcache-repository "policy-switch")))
@@ -464,7 +469,7 @@ Return nil if restoring is needed, false otherwise."
 
 ;;;###autoload
 (defun policy-switch-load-policies nil
-  "Load all saved policies from `policy-switch-save-file'."
+  "Load all saved policies."
   (interactive)
   (setq policy-switch-policies-list
 	(pcache-get (pcache-repository "policy-switch") 'policies)))
@@ -796,8 +801,6 @@ buffers."
     (let ((pos (position 'mode-line-modes mode-line)))
       (setcdr mode-line (append (subseq mode-line 0 pos) (list policy-switch-mode-line-elm) (nthcdr pos mode-line))))))
 
-;; load policies
-(policy-switch-load-policies)
 
 (provide 'policy-switch)
 
